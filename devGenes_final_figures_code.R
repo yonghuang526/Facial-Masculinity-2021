@@ -1,0 +1,383 @@
+source("helper_functions.R")
+dat = read.table("table_S1_final.txt",sep="\t",header=T,stringsAsFactors=F)
+l = read.table("devGenes_final_factor_model_loadings.txt",sep="\t",header=T,
+	stringsAsFactors=F,row.names=1)
+
+##########################################################################
+### figure 2 - facial and digital masculinity by age
+##########################################################################
+
+### see helper_functions.R; lboot() returns the lowess trend of the 
+### data as well as its 95% CI; the object returned by lboot()
+### can be visualized using plotl() as shown below
+
+set.seed(1283)
+### get the trends for TD males
+idx = !dat$affected & dat$sex_male==1
+tdM_flm = lboot(dat$ageyears,dat$facial_masc_raw,subset=idx,return.boot=T)
+tdM_drm = lboot(dat$ageyears,dat$digit_ratio_raw,subset=idx,return.boot=T)
+
+### get the trends for TD females
+idx = !dat$affected & dat$sex_male==0
+tdF_flm = lboot(dat$ageyears,dat$facial_masc_raw,subset=idx,return.boot=T)
+tdF_drm = lboot(dat$ageyears,dat$digit_ratio_raw,subset=idx,return.boot=T)
+
+set.seed(7751)
+### get the trends for affected males
+idx = dat$affected & dat$sex_male==1
+affM_flm = lboot(dat$ageyears,dat$facial_masc_raw,subset=idx,return.boot=T)
+affM_drm = lboot(dat$ageyears,dat$digit_ratio_raw,subset=idx,return.boot=T)
+
+### get the trends for affected females
+idx = dat$affected & dat$sex_male==0
+affF_flm = lboot(dat$ageyears,dat$facial_masc_raw,subset=idx,return.boot=T)
+affF_drm = lboot(dat$ageyears,dat$digit_ratio_raw,subset=idx,return.boot=T)
+
+### the figure
+png("fig2.png",12,8,res=300,units="in")
+ par(mfrow=c(2,3))
+
+ ### plot the TD male and female trends for digit ratio
+ plotl(tdM_drm,l.col="blue",shade.col=rgb(0,0,1,0.2),pt.col=rgb(0,0,1,0.2),
+	plot.points=T,ylab="2D:4D ratio",ylim=c(0.85,1.1))
+ plotl(tdF_drm,l.col="red",shade.col=rgb(1,0,0,0.2),pt.col=rgb(1,0,0,0.2),
+	plot.points=T,ylab="2D:4D ratio",ylim=c(0.85,1.1),add=T)
+
+ ### plot the TD male and aff male trends for digit ratio
+ plotl(tdM_drm,l.col="grey",shade.col=rgb(0.2,0.2,0.2,0.2),pt.col=rgb(0.2,0.2,0.2,0.2),
+	plot.points=F,ylab="2D:4D ratio",ylim=c(0.85,1.1))
+ plotl(affM_drm,l.col="blue",shade.col=rgb(0,0,1,0.2),pt.col=rgb(0,0,1,0.2),
+	plot.points=T,ylab="2D:4D ratio",ylim=c(0.85,1.1),add=T,plot.ci=F)
+ ### look at the empirical p value for Ha: aff > masc. than TD
+ ### (for digit ratio, lower value is more masculine)
+ sum(colSums(tdM_drm$b)<sum(affM_drm$y))/1000 ### this is the empirical p-value
+
+ ### plot the TD female and aff female trends for digit ratio
+ plotl(tdF_drm,l.col="grey",shade.col=rgb(0.2,0.2,0.2,0.2),pt.col=rgb(0.2,0.2,0.2,0.2),
+	plot.points=F,ylab="2D:4D ratio",ylim=c(0.85,1.1))
+ plotl(affF_drm,l.col="red",shade.col=rgb(1,0,0,0.2),pt.col=rgb(1,0,0,0.2),
+	plot.points=T,ylab="2D:4D ratio",ylim=c(0.85,1.1),add=T,plot.ci=F)
+ ### look at the empirical p value for Ha: aff > masc. than TD
+ ### (for digit ratio, lower value is more masculine)
+ sum(colSums(tdF_drm$b)<sum(affF_drm$y))/1000 ### this is the empirical p-value
+
+ ### plot the TD male and female trends for facial masculinity
+ plotl(tdM_flm,l.col="blue",shade.col=rgb(0,0,1,0.2),pt.col=rgb(0,0,1,0.2),
+	plot.points=T,ylab="facial masculinity",ylim=c(-6,6))
+ plotl(tdF_flm,l.col="red",shade.col=rgb(1,0,0,0.2),pt.col=rgb(1,0,0,0.2),
+	plot.points=T,ylab="facial masculinity",ylim=c(-6,6),add=T)
+
+ ### plot the TD male and aff male trends for facial masculinity
+ plotl(tdM_flm,l.col="grey",shade.col=rgb(0.2,0.2,0.2,0.2),pt.col=rgb(0.2,0.2,0.2,0.2),
+	plot.points=F,ylab="facial masculinity",ylim=c(-6,6))
+ plotl(affM_flm,l.col="blue",shade.col=rgb(0,0,1,0.2),pt.col=rgb(0,0,1,0.2),
+	plot.points=T,ylab="facial masculinity",ylim=c(-6,6),add=T,plot.ci=F)
+ ### look at the empirical p value for Ha: aff > masc. than TD
+ sum(colSums(tdM_flm$b)>sum(affM_flm$y))/1000 ### this is the empirical p-value
+
+ ### plot the TD female and aff female trends for facial masculinity
+ plotl(tdF_flm,l.col="grey",shade.col=rgb(0.2,0.2,0.2,0.2),pt.col=rgb(0.2,0.2,0.2,0.2),
+	plot.points=F,ylab="facial masculinity",ylim=c(-6,6))
+ plotl(affF_flm,l.col="red",shade.col=rgb(1,0,0,0.2),pt.col=rgb(1,0,0,0.2),
+	plot.points=T,ylab="facial masculinity",ylim=c(-6,6),add=T,plot.ci=F)
+ ### look at the empirical p value for Ha: aff > masc. than TD
+ sum(colSums(tdF_flm$b)>sum(affF_flm$y))/1000 ### this is the empirical p-value
+
+dev.off()
+
+##########################################################################
+### figure 3 - relationships with dx and parent-reported problems
+##########################################################################
+
+### TOP PART (dx) ### 
+
+### pull out the Dx indicators
+dxlab = c("adhd","asd","ID","lang","epilepsy","depression","bipolar","anxiety")
+dx = as.data.frame(sapply(dat[,dxlab],as.integer))
+rownames(dx) = rownames(dat)
+
+cc = c("grey",rep("orangered",5),rep("mistyrose",3))
+
+### structure the masculinity data according to Dx
+ll = lapply(dx,function(x) dat$Zdrm[x==1])
+ll = c(list(TD=dat$Zdrm[rowSums(dx)==0]),ll)
+ll_drm = ll
+ll = lapply(dx,function(x) dat$Zflm[x==1])
+ll = c(list(TD=dat$Zflm[rowSums(dx)==0]),ll)
+ll_flm = ll
+
+## t-tests comparing TD to all other Dxs
+td_vs_dx = function(x) {
+ p = sapply(x[-1],function(y) t.test(x[[1]],y)$p.v)
+ fdr = p.adjust(p,'fdr')
+ out = cbind(p,fdr)
+ rownames(out) = names(x)[-1]
+ return(out)
+}
+
+p_drm = td_vs_dx(ll_drm)
+p_flm = td_vs_dx(ll_flm)
+
+### set up layout
+png("fig3_top.png",12,6.5,res=300,units="in")
+ 
+ layout(matrix(c(1,3,2,4),2,2),heights=c(1,5))
+
+ ### the barplots showing the significance of the comparisons
+ par(mar=c(0,4,1,2))
+ barplot(-log10(t(rbind(c(NA,NA),p_drm))),
+	beside=T,
+	las=2,
+	ylim=c(0,2.5),
+	ylab="-log10 P or FDR",
+	names.arg=rep("",9),
+	legend.text=c("p","FDR"),
+	args.legend=list(x="topleft",bty="n",border=NA,inset=0.03))
+ abline(h=-log10(0.05),col='red',lty=2)
+ barplot(-log10(t(rbind(c(NA,NA),p_flm))),
+	beside=T,
+	las=2,
+	ylim=c(0,2.5),
+	ylab="-log10 P or FDR",
+	names.arg=rep("",9),
+	legend.text=c("p","FDR"),
+	args.legend=list(x="topright",bty="n",border=NA,inset=0.03))
+ abline(h=-log10(0.05),col='red',lty=2)
+
+ ## the boxplots showing the distribution of the masculinity scores within
+ ## each dx category
+ par(mar=c(5,4,0.5,2))
+ bp = boxplot(ll_drm,las=2,ylim=c(-4,4),
+	col=c("grey",rep("white",8)),
+	ylab="DRM (age and sex-corrected)",
+	xaxs="i")
+ ### pattern fills to emphasize (non)significance
+ rect((2:9)-.4, 
+	bp$stats[2,-1], 
+	(2:9)+.4, 
+	bp$stats[4,-1],
+	density=c(rep(30,8)), ## tweaked according to which comparisons are sig.
+	col=cc[-1],border="black") 
+ bp = boxplot(ll_flm,las=2,ylim=c(-4,4),
+	col=c("grey",rep("orangered",3),rep("white",5)),
+	ylab="FLM (age and sex-corrected)",
+	xaxs="i")
+ ### pattern fills to emphasize (non)significance
+ rect((2:9)-.4, 
+	bp$stats[2,-1], 
+	(2:9)+.4, 
+	bp$stats[4,-1],
+	density=c(0,0,0,rep(30,6)), ## tweaked according to which comparisons are sig.
+	col=cc[-1],border="black") 
+dev.off()
+
+
+### BOTTOM PART (parent-report factors) ###
+
+# Xs is the matrix of parent-reported items (we are only distributing factor scores)
+# fac = factanal(scale(Xs),factors=11,scores="regression")
+
+### grab the factor scores from the supplemental table
+S =  dat[,grep("Factor",colnames(dat))]
+### look at the correlations
+cors = cor(dat[,c("Zdrm","Zflm")],S,use="pairwise.complete.obs",method="spearman")
+
+
+png("fig3_bottom.png",12,6,res=300,units="in")
+
+ ### set layout
+ layout(matrix(c(1,2,3),1,3),widths=c(1.5,5,5))
+ ### set colors, labels, and breaks for loadings
+ cp = colorRampPalette(c("steelblue","ivory","red"))
+ flab = c("F1:ability","F2:sens/order","F3:aggression","F4:feeding",
+	"F5:self-harm","F6:stimming","F7:social anxiety","F8:cutting",
+	"F9:social/friends","F10:GI","F11:sound sensitivity")
+ bk = c(-1,seq(-1,-0.1,length.out=127),0,seq(0.1,1,length.out=127),1)
+
+ ### the key for the factor loadings
+ par(mar=c(5,7,12,1))
+ img(as.matrix(seq(1,-1,length.out=256)),col=cp(256),breaks=bk)
+ axis(2,at=c(0,256/2,256),labels=c(1,0,-1))
+ mtext("factor loadings",side=2,at=256/0,line=3,cex=0.8)
+
+ ### the factor loadings
+ par(mar=c(5,1,12,1))
+ img(t(l),breaks=bk,col=cp(256))
+ mtext(rownames(l),side=3,at=c(1:nrow(l))-0.5,las=2,line=0.5,cex=0.5)
+ abline(h=c(0:12),col='grey')
+ box()
+
+ ### the barplot of correlations w/ factor scores
+ par(mar=c(5,9,12,2))
+ bp = barplot(cors[2:1,11:1],beside=T,las=2,yaxs="i",names.arg=flab[11:1],axes=F,
+	ylab="",col=c("darkseagreen","cadetblue"),
+	legend.text=c("FLM","DRM"),
+	args.legend=list(x="topleft",inset=0.03,border=NA,bty='n',density=-1),
+	border=NA,xlim=c(-0.2,0.22),
+	density=rev(c(rep(30,16),-1,-1,rep(30,4))),horiz=T)
+ axis(1,line=1.5)
+ mtext("Spearman's rho",side=1,at=0.025,line=4,cex=0.8)
+ text(c(0.21,0.21),bp[1:2,3],rep("*",2),col='red',cex=2)
+dev.off()
+
+### for statistics
+### DRM:  rho: 0.2, p=0.004, FDR=0.04
+### FLM: rho=0.19, p=0.004, FDR=0.04
+
+
+p.adjust(apply(S,2,function(y) cor.test(y,dat$Zdrm,method="spearman")$p.val),'fdr')
+p.adjust(apply(S,2,function(y) cor.test(y,dat$Zflm,method="spearman")$p.val),'fdr')
+
+
+
+##########################################################################
+### figure 4 - PRS in devGenes
+##########################################################################
+
+### pull out the PRS and covariates from the main table for convenience
+prs = dat[,grep("p0",colnames(dat))]
+covars = dat[,c(2:3,grep("PC",colnames(dat)))]
+covars[[1]] = log(covars[[1]])
+
+### wrapper to grab the PRS-related effect (x) and associated statistics
+### from a linear model
+fsig = function(x,y) summary(lm(y~.,data=data.frame(covars,x)))$coef[9,]
+
+cfsoc = t(apply(prs,2,fsig,S[,9]))
+cfdrm = t(apply(prs,2,fsig,dat$Zdrm))
+cfflm = t(apply(prs,2,fsig,dat$Zflm))
+
+### add FDR
+cfsoc = cbind(cfsoc,FDR = p.adjust(cfsoc[,4],'fdr'))
+cfdrm = cbind(cfdrm,FDR = p.adjust(cfdrm[,4],'fdr'))
+cfflm = cbind(cfflm,FDR = p.adjust(cfflm[,4],'fdr'))
+
+### assemble the t-statistics and arrange for the barplot
+p1 = cbind(drm=cfdrm[grepl("0\\.1$",rownames(cfdrm)),3],
+	flm=cfflm[grepl("0\\.1$",rownames(cfflm)),3],
+	F9=cfsoc[grepl("0\\.1$",rownames(cfsoc)),3])
+p01 = cbind(drm=cfdrm[grepl("0\\.01$",rownames(cfdrm)),3],
+	flm=cfflm[grepl("0\\.01$",rownames(cfflm)),3],
+	F9=cfsoc[grepl("0\\.01$",rownames(cfsoc)),3])
+
+### this is what will be plotted
+pdrm = cbind(p01[,1],p1[,1])
+pflm = cbind(p01[,2],p1[,2])
+psoc = cbind(p01[,3],p1[,3])
+
+### helper function to pattern fill according to significance
+fdens = function(x) ifelse(t(abs(x)>=1.96),-1,30)
+
+### the plot
+png("fig4_left.png",6,12,res=300,units="in")
+
+ ### define colors and labels
+ cc = c("steelblue1","steelblue4")
+ plab = c("UKBB\ntestosterone","UKBB\nSHBG","UKBB\nsoc. dissatis.","PGC\nASD","PGC\nADHD","UKBB\nCog","SSGAC\nEA")
+
+ par(mfrow=c(3,1))
+ par(mar=c(1,5,2,2))
+
+ ### DRM-PRS associations
+ bp = barplot(t(pdrm),
+	beside=T,
+	las=2,
+	ylim=c(-4.2,4),
+	names.arg=rep("",7),
+	density=fdens(pdrm),
+	col=cc,border=NA,
+	legend.text=c("Psnp<0.01","Psnp<0.1"),
+	args.legend=list(x="topright",bty='n',border=NA,density=-1),
+	ylab="DRM vs. PRS association\n(t-statistic)")
+ rect(t(bp)[,1]-1,-4.20,t(bp)[,2]+1,-3.55)
+ text(bp[1,]+0.5,rep(-3.88,7),plab,cex=0.85)
+ abline(h=c(-1.96,1.96),col='red',lty=2)
+
+ ### FLM-PRS associations
+ par(mar=c(1,5,2,2))
+ barplot(t(pflm),
+	beside=T,
+	las=2,
+	ylim=c(-4.2,4),
+	names.arg=rep("",7),
+	density=fdens(pflm),
+	col=cc,border=NA,
+	ylab="FLM vs. PRS association\n(t-statistic)")
+ abline(h=c(-1.96,1.96),col='red',lty=2)
+ rect(t(bp)[,1]-1,-4.20,t(bp)[,2]+1,-3.55)
+ text(bp[1,]+0.5,rep(-3.88,7),plab,cex=0.85)
+
+ ### F9 (social) - PRS associations
+ par(mar=c(1,5,2,2))
+ barplot(t(psoc),
+	beside=T,
+	las=2,
+	ylim=c(-4.2,4),
+	names.arg=rep("",7),
+	density=fdens(psoc),
+	col=cc,border=NA,
+	ylab="F9 (social/friends) vs. PRS association\n(t-statistic)")
+ abline(h=c(-1.96,1.96),col='red',lty=2)
+ rect(t(bp)[,1]-1,-4.20,t(bp)[,2]+1,-3.55)
+ text(bp[1,]+0.5,rep(-3.88,7),plab,cex=0.85)
+
+dev.off()
+
+
+### these plots show variation in masculinity measures as a function
+### of "chunked" (bottom 20%, middle 60%, top 20%) testosterone and SHBG PRS
+
+png("fig4_right.png",7,12,res=300,units="in")
+ ## set up colors, layout, and labels
+ par(mfrow=c(3,2),mar=c(4,4,3,2))
+ cc1 = colorRampPalette(c("ivory","orangered1"))(3)
+ cc2 = colorRampPalette(c("ivory","paleturquoise3"))(3)
+ nn = c("bottom 20%","middle 60%","top 20%")
+
+ boxplot(dat$Zdrm~prs[,1],
+	names=nn,
+	ylab="DRM",
+	main="testosterone PRS",
+	col=cc1)
+ boxplot(dat$Zdrm~prs[,9],
+	names=nn,
+	ylab="DRM",
+	main="SHBG PRS",
+	col=cc2)
+ boxplot(dat$Zflm~prs[,1],
+	names=nn,
+	ylab="FLM",
+	main="testosterone PRS",
+	col=cc1)
+ boxplot(dat$Zflm~prs[,9],
+	names=nn,
+	ylab="FLM",
+	main="SHBG PRS",
+	col=cc2)
+ boxplot(S[,9]~prs[,1],
+	names=nn,
+	ylab="Factor 9 (social)",
+	main="testosterone PRS",
+	col=cc1)
+ boxplot(S[,9]~prs[,9],
+	names=nn,
+	ylab="Factor 9 (social)",
+	main="SHBG PRS",
+	col=cc2)
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
